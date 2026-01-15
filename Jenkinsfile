@@ -20,7 +20,7 @@ pipeline {
                 stage('Wiremock') {
                     steps {
                         sh 'docker start wiremock || true'
-                        sleep 3
+                        sleep 4
                     }
                 }
             }
