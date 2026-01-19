@@ -8,7 +8,7 @@ pipeline {
   stages {
 
     stage('Get Code') {
-      agent none
+      agent { label 'master' }
       steps {
         sh 'whoami && hostname && echo ${WORKSPACE}'
         checkout scm
@@ -35,7 +35,7 @@ pipeline {
           steps {
             sh 'whoami && hostname && echo ${WORKSPACE}'
             sh '''
-              echo "Arrancando Wiremock en master"
+              echo "Iniciando Wiremock en master"
               docker start wiremock || true
               sleep 4
             '''
@@ -88,6 +88,11 @@ pipeline {
         '''
         recordIssues tools: [flake8(pattern: 'flake8.out')]
       }
+      post {
+        always {
+          cleanWs()
+        }
+      }
     }
 
     stage('Security') {
@@ -112,6 +117,11 @@ pipeline {
         '''
         perfReport sourceDataFiles: 'flask.jtl'
       }
+      post {
+        always {
+          cleanWs()
+        }
+      }
     }
 
     stage('Coverage') {
@@ -128,13 +138,12 @@ pipeline {
         sh 'whoami && hostname && echo ${WORKSPACE}'
         junit 'result*.xml'
       }
+      post {
+        always {
+          cleanWs()
+        }
+      }
     }
 
-  }
-
-  post {
-    always {
-      cleanWs()
-    }
   }
 }
