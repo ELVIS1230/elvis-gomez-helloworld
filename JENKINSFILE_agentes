@@ -62,9 +62,11 @@ pipeline {
 
             sh '''
               export PYTHONPATH=$PWD
-              ./venv/bin/pytest --junitxml=result_unit.xml test/unit
+              ./venv/bin/coverage run --branch --source=app --omit=app/__init__.py,app/api.py -m pytest test/unit --junitxml=result_unit.xml
+              ./venv/bin/coverage xml -o coverage.xml
             '''
             junit 'result_unit.xml'
+            stash name: 'coverage', includes: 'coverage.xml'
           }
         }
 
@@ -177,14 +179,8 @@ pipeline {
         sh 'echo ${WORKSPACE}'
 
         unstash 'source'
+        unstash 'coverage'
         unstash 'venv'
-
-        sh '''
-          ./venv/bin/coverage run --branch --source=app \
-          --omit=app/__init__.py,app/api.py \
-          -m pytest test/unit
-          ./venv/bin/coverage xml -o coverage.xml
-        '''
 
         recordCoverage(
           qualityGates: [
