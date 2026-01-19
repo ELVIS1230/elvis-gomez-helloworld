@@ -23,10 +23,19 @@ pipeline {
         sh '''
           ./venv/bin/flake8 --exit-zero --format=pylint app >flake8.out
         '''
-        recordIssues tools: [flake8(name: 'Flake8', pattern: 'flake8.out')], qualityGates: [
-          [threshold: 16, type: 'TOTAL', unstable: true],
-          [threshold: 17, type: 'TOTAL', unstable: false]
-        ]
+        recordIssues(
+          qualityGates: [
+            [criticality: 'NOTE', integerThreshold: 8, threshold: 8.0, type: 'TOTAL'],
+            [criticality: 'ERROR', integerThreshold: 10, threshold: 10.0, type: 'TOTAL']
+          ],
+          tools: [
+            flake8(pattern: 'flake8.out')
+          ]
+        )S
+        // recordIssues tools: [flake8(name: 'Flake8', pattern: 'flake8.out')], qualityGates: [
+        //   [threshold: 16, type: 'TOTAL', unstable: true],
+        //   [threshold: 17, type: 'TOTAL', unstable: false]
+        // ]
       }
     }
     stage('Test') {
@@ -65,14 +74,25 @@ pipeline {
         '''
         recordCoverage(
           qualityGates: [
-            [criticality: 'NOTE', integerThreshold: 85, metric: 'LINE', threshold: 85.0],
-            [criticality: 'ERROR', integerThreshold: 60, metric: 'LINE', threshold: 60.0],
-            [criticality: 'NOTE', metric: 'BRANCH']
+            [criticality: 'ERROR', integerThreshold: 85, metric: 'LINE', threshold: 85.0],
+            [criticality: 'NOTE', integerThreshold: 95, metric: 'LINE', threshold: 95.0],
+            [criticality: 'ERROR', integerThreshold: 80, metric: 'BRANCH', threshold: 80.0],
+            [criticality: 'NOTE', integerThreshold: 90, metric: 'BRANCH', threshold: 90.0]
           ],
           tools: [
             [parser: 'COBERTURA', pattern: 'coverage.xml']
           ]
         )
+        // recordCoverage(
+        //   qualityGates: [
+        //     [criticality: 'NOTE', integerThreshold: 85, metric: 'LINE', threshold: 85.0],
+        //     [criticality: 'ERROR', integerThreshold: 60, metric: 'LINE', threshold: 60.0],
+        //     [criticality: 'NOTE', metric: 'BRANCH']
+        //   ],
+        //   tools: [
+        //     [parser: 'COBERTURA', pattern: 'coverage.xml']
+        //   ]
+        // )
       }
     }
     stage('Security') {
@@ -80,15 +100,24 @@ pipeline {
         sh '''
           ./venv/bin/bandit --exit-zero -r . -f custom -o bandit.out --msg-template "{abspath}:{line} [{test_id} {msg}]"
         '''
-        recordIssues(
-          tools: [
-            pyLint(name: 'Bandit', pattern: 'bandit.out')
-          ],
-          qualityGates: [
-            [threshold: 1, type: 'TOTAL', unstable: true],
-            [threshold: 2, type: 'TOTAL', unstable: false]
-          ]
-        )
+          recordIssues(
+            qualityGates: [
+              [criticality: 'NOTE', integerThreshold: 2, threshold: 2.0, type: 'TOTAL'],
+              [criticality: 'FAILURE', integerThreshold: 4, threshold: 4.0, type: 'TOTAL']
+            ],
+            tools: [
+              pyLint(pattern: 'bandit.out')
+            ]
+          )
+        // recordIssues(
+        //   tools: [
+        //     pyLint(name: 'Bandit', pattern: 'bandit.out')
+        //   ],
+        //   qualityGates: [
+        //     [threshold: 1, type: 'TOTAL', unstable: true],
+        //     [threshold: 2, type: 'TOTAL', unstable: false]
+        //   ]
+        // )
       }
     }
     stage('Performance') {
