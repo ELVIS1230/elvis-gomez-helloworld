@@ -76,40 +76,39 @@ pipeline {
             junit 'result_rest.xml'
           }
         }
-
-      }
-    }
-
-    stage('Static Analysis') {
-      agent { label 'analysis-agent' }
-      steps {
-        unstash 'venv'
-        sh 'whoami && hostname && echo ${WORKSPACE}'
-        sh '''
-          ./venv/bin/flake8 --exit-zero --format=pylint app > flake8.out
-        '''
-        recordIssues tools: [flake8(pattern: 'flake8.out')]
-
-      }
-
-      post {
-        always {
-          cleanWs()
+        stage('Static Analysis') {
+          agent { label 'analysis-agent' }
+          steps {
+            unstash 'venv'
+            sh 'whoami && hostname && echo ${WORKSPACE}'
+            sh '''
+              ./venv/bin/flake8 --exit-zero --format=pylint app > flake8.out
+              ./venv/bin/bandit --exit-zero -r app -f custom -o bandit.out
+            '''
+            recordIssues( 
+              qualityGates: [
+                [criticality: 'NOTE', integerThreshold: 8, threshold: 8.0, type: 'TOTAL'],
+                [criticality: 'ERROR', integerThreshold: 10, threshold: 10.0, type: 'TOTAL']
+              ],
+              tools: [flake8(pattern: 'flake8.out')
+              ]
+            )
+            recordIssues (
+              qualityGates: [
+                [criticality: 'NOTE', integerThreshold: 2, threshold: 2.0, type: 'TOTAL'],
+                [criticality: 'FAILURE', integerThreshold: 4, threshold: 4.0, type: 'TOTAL']
+              ], 
+            tools: [pyLint(pattern: 'bandit.out')]
+            )
+          }
+          post {
+            always {
+              cleanWs()
+            }
+          }
         }
-      }
-    }
 
-    stage('Security') {
-      agent { label 'analysis-agent' }
-      steps {
-        unstash 'venv'
-        sh 'whoami && hostname && echo ${WORKSPACE}'
-        sh '''
-          ./venv/bin/bandit --exit-zero -r app -f custom -o bandit.out
-        '''
-        recordIssues tools: [pyLint(pattern: 'bandit.out')]
       }
-
     }
 
     stage('Performance') {
@@ -135,20 +134,15 @@ pipeline {
       agent { label 'build-agent' }
       steps {
         sh 'whoami && hostname && echo ${WORKSPACE}'
-        recordCoverage tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']]
-      }
-    }
-
-    stage('Results') {
-      agent { label 'build-agent' }
-      steps {
-        sh 'whoami && hostname && echo ${WORKSPACE}'
-        junit 'result*.xml'
-      }
-      post {
-        always {
-          cleanWs()
-        }
+        recordCoverage(
+          tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']],
+          qualityGates: [
+              [criticality: 'ERROR', integerThreshold: 85, metric: 'LINE',   threshold: 85.0],
+              [criticality: 'NOTE',  integerThreshold: 95, metric: 'LINE',   threshold: 95.0],
+              [criticality: 'ERROR', integerThreshold: 80, metric: 'BRANCH', threshold: 80.0],
+              [criticality: 'NOTE',  integerThreshold: 90, metric: 'BRANCH', threshold: 90.0]
+          ]
+        )
       }
     }
 
