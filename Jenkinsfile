@@ -10,7 +10,7 @@ pipeline {
       parallel {
 
         stage('Dependencies') {
-          agent { docker { image 'python:3.11' } }
+          agent { docker { image 'python:3.11', args '-u 131:139' }}
           steps {
             sh 'id'
             sh 'hostname'
