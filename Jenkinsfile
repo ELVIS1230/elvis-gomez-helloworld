@@ -4,6 +4,11 @@ pipeline {
     FLASK_APP = 'app/api.py'
   }
   stages {
+    stage('Get Code') {
+      steps {
+        checkout scm
+      }
+    }
     stage('Dependencies') {
       steps {
         sh '''
