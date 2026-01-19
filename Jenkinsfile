@@ -133,13 +133,5 @@ pipeline {
           }
       }
     }
-    stage('Results') {
-      steps {
-        junit 'result*.xml'
-      }
-    }
-    
-    
-  
   }
 }
