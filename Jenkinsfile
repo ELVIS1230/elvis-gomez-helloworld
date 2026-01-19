@@ -12,7 +12,7 @@ pipeline {
         stage('Dependencies') {
           agent { docker { image 'python:3.11' } }
           steps {
-            sh 'whoami'
+            sh 'id'
             sh 'hostname'
             sh 'echo ${WORKSPACE}'
 
@@ -31,7 +31,7 @@ pipeline {
         stage('Wiremock') {
           agent { docker { image 'python:3.11' } }
           steps {
-            sh 'whoami'
+            sh 'id'
             sh 'hostname'
             sh 'echo ${WORKSPACE}'
 
@@ -53,7 +53,7 @@ pipeline {
         stage('Unit Tests') {
         agent { docker { image 'python:3.11' } }
           steps {
-            sh 'whoami'
+            sh 'id'
             sh 'hostname'
             sh 'echo ${WORKSPACE}'
 
@@ -73,7 +73,7 @@ pipeline {
         stage('REST Tests') {
         agent { docker { image 'python:3.11' } }
           steps {
-            sh 'whoami'
+            sh 'id'
             sh 'hostname'
             sh 'echo ${WORKSPACE}'
 
@@ -97,7 +97,7 @@ pipeline {
     stage('Static Analysis') {
       agent { docker { image 'python:3.11' } }
       steps {
-        sh 'whoami'
+        sh 'id'
         sh 'hostname'
         sh 'echo ${WORKSPACE}'
 
@@ -124,7 +124,7 @@ pipeline {
     stage('Security') {
       agent { docker { image 'python:3.11' } }
       steps {
-        sh 'whoami'
+        sh 'id'
         sh 'hostname'
         sh 'echo ${WORKSPACE}'
 
@@ -152,7 +152,7 @@ pipeline {
     stage('Performance') {
       agent { docker { image 'python:3.11' } }
       steps {
-        sh 'whoami'
+        sh 'id'
         sh 'hostname'
         sh 'echo ${WORKSPACE}'
 
@@ -174,7 +174,7 @@ pipeline {
     stage('Coverage') {
       agent { docker { image 'python:3.11' } }
       steps {
-        sh 'whoami'
+        sh 'id'
         sh 'hostname'
         sh 'echo ${WORKSPACE}'
 
