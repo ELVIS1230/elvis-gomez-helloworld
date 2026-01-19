@@ -8,7 +8,6 @@ pipeline {
   stages {
 
     stage('Get Code') {
-      agent { label 'master' }
       steps {
         sh 'whoami && hostname && echo ${WORKSPACE}'
         checkout scm
