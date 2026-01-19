@@ -28,7 +28,7 @@ pipeline {
               catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                 sh '''
                   export PYTHONPATH=$PWD
-                  ./venv/bin/pytest --junitxml=result-unit.xml test/unit
+                  ./venv/bin/pytest --junitxml=result_unit.xml test/unit
                 '''
                 junit 'result_unit.xml'
               }
@@ -40,7 +40,7 @@ pipeline {
                 sh '''
                   export PYTHONPATH=$PWD
                   ./venv/bin/flask run & sleep 3
-                  ./venv/bin/pytest --junitxml=result.xml test/rest
+                  ./venv/bin/pytest --junitxml=result_rest.xml test/rest
                 '''
                 junit 'result_rest.xml'
               }
