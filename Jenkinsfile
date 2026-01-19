@@ -8,7 +8,7 @@ pipeline {
   stages {
 
     stage('Get Code') {
-      agent { label 'build-agent' }
+      agent { label 'master' }
       steps {
         sh 'whoami && hostname && echo ${WORKSPACE}'
         checkout scm
@@ -31,11 +31,12 @@ pipeline {
         }
 
         stage('Wiremock') {
-          agent { label 'build-agent' }
+          agent { label 'master' }
           steps {
             sh 'whoami && hostname && echo ${WORKSPACE}'
             sh '''
-              echo "Wiremock simulado (sin Docker)"
+              echo "Arrancando Wiremock en master"
+              docker start wiremock || true
               sleep 4
             '''
           }
