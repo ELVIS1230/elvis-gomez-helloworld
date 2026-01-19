@@ -7,14 +7,6 @@ pipeline {
 
   stages {
 
-    stage('Get Code') {
-      agent { label 'build-agent' }
-      steps {
-        sh 'whoami && hostname && echo ${WORKSPACE}'
-        checkout scm
-      }
-    }
-
     stage('Dependencies and Wiremock') {
       parallel {
 
