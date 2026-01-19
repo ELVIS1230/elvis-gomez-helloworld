@@ -82,19 +82,21 @@ pipeline {
         }
       }
     }
-    stage('Security') {
+     stage('Security') {
       steps {
         catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
           sh '''
             ./venv/bin/bandit --exit-zero -r app -f custom -o bandit.out --msg-template "{abspath}:{line}: [{test_id}] {msg}"
           '''
           recordIssues(
+            id: 'bandit',
+            name: 'Bandit (parsed as Pylint)',
             qualityGates: [
-              [criticality: 'NOTE', integerThreshold: 2, threshold: 2.0, type: 'TOTAL'],
-              [criticality: 'FAILURE', integerThreshold: 4, threshold: 4.0, type: 'TOTAL']
+              [criticality: 'NOTE', integerThreshold: 2, type: 'TOTAL'],
+              [criticality: 'FAILURE', integerThreshold: 4, type: 'TOTAL']
             ],
             tools: [
-              bandit(pattern: 'bandit.out')
+              pyLint(pattern: 'bandit.out')
             ]
           )
         }
