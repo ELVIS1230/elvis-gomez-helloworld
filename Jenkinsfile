@@ -117,6 +117,9 @@ pipeline {
     stage('Coverage') {
       steps {
         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+          sh '''
+    
+            '''
             recordCoverage(
               qualityGates: [
                 [criticality: 'ERROR', integerThreshold: 85, metric: 'LINE', threshold: 85.0],
