@@ -69,9 +69,9 @@ pipeline {
           }
         }
         stage('Static Analysis') {
-          agent { label 'analysis-agent' }
+          agent { label 'build-agent' }
           steps {
-            unstash 'venv'
+            // unstash 'venv'
             sh 'whoami && hostname && echo ${WORKSPACE}'
             sh '''
               ./venv/bin/flake8 --exit-zero --format=pylint app > flake8.out
