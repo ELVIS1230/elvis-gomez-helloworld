@@ -82,7 +82,6 @@ pipeline {
 
     stage('Static Analysis') {
       agent { label 'analysis-agent' }
-      unstash 'venv'
       steps {
         sh 'whoami && hostname && echo ${WORKSPACE}'
         sh '''
@@ -91,6 +90,8 @@ pipeline {
         recordIssues tools: [flake8(pattern: 'flake8.out')]
 
       }
+      unstash 'venv'
+
       post {
         always {
           cleanWs()
@@ -100,7 +101,6 @@ pipeline {
 
     stage('Security') {
       agent { label 'analysis-agent' }
-      unstash 'venv'
       steps {
         sh 'whoami && hostname && echo ${WORKSPACE}'
         sh '''
@@ -108,11 +108,12 @@ pipeline {
         '''
         recordIssues tools: [pyLint(pattern: 'bandit.out')]
       }
+      unstash 'venv'
+
     }
 
     stage('Performance') {
       agent { label 'analysis-agent' }
-      unstash 'venv'
       steps {
         sh 'whoami && hostname && echo ${WORKSPACE}'
         sh '''
@@ -122,6 +123,7 @@ pipeline {
         '''
         perfReport sourceDataFiles: 'flask.jtl'
       }
+      unstash 'venv'
       post {
         always {
           cleanWs()
