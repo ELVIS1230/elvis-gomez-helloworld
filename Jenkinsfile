@@ -86,11 +86,12 @@ pipeline {
       steps {
         catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
           sh '''
-            ./venv/bin/bandit --exit-zero -r app -f custom -o bandit.out --msg-template "{abspath}:{line}: [{test_id}] {msg}"
+            export PYTHONPATH=$PWD
+            ./venv/bin/bandit --exit-zero -r . -f custom -o bandit.out --msg-template "{abspath}:{line}: [{test_id}] {msg}"
+            cat bandit.out
           '''
           recordIssues(
-            id: 'bandit',
-            name: 'Bandit (parsed as Pylint)',
+           
             qualityGates: [
               [criticality: 'NOTE', integerThreshold: 2, type: 'TOTAL'],
               [criticality: 'FAILURE', integerThreshold: 4, type: 'TOTAL']
