@@ -44,8 +44,10 @@ pipeline {
               catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                 sh '''
                   export PYTHONPATH=$PWD
-                  ./venv/bin/pytest --junitxml=result_unit.xml test/unit
+                  ./venv/bin/coverage run --branch --source=app --omit=app/__init__.py,app/api.py -m ./venv/bin/pytest test/unit --junitxml=result_unit.xml
+                  ./venv/bin/coverage xml -o coverage.xml
                 '''
+                  // ./venv/bin/pytest --junitxml=result_unit.xml test/unit
                 junit 'result_unit.xml'
               }
             }
@@ -115,29 +117,27 @@ pipeline {
     stage('Coverage') {
       steps {
         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-          sh '''
-          export PYTHONPATH=$PWD
-
-        ./venv/bin/coverage run --branch \
-          --source=app \
-          --omit=app/__init__.py,app/api.py \
-          -m unittest discover -s test/unit
-
-        ./venv/bin/coverage xml -o coverage.xml
-      '''
-      recordCoverage(
-        qualityGates: [
-          [criticality: 'ERROR', integerThreshold: 85, metric: 'LINE', threshold: 85.0],
-          [criticality: 'NOTE', integerThreshold: 95, metric: 'LINE', threshold: 95.0],
-          [criticality: 'ERROR', integerThreshold: 80, metric: 'BRANCH', threshold: 80.0],
-          [criticality: 'NOTE', integerThreshold: 90, metric: 'BRANCH', threshold: 90.0]
-        ],
-        tools: [
-          [parser: 'COBERTURA', pattern: 'coverage.xml']
-        ]
-      )
+            recordCoverage(
+              qualityGates: [
+                [criticality: 'ERROR', integerThreshold: 85, metric: 'LINE', threshold: 85.0],
+                [criticality: 'NOTE', integerThreshold: 95, metric: 'LINE', threshold: 95.0],
+                [criticality: 'ERROR', integerThreshold: 80, metric: 'BRANCH', threshold: 80.0],
+                [criticality: 'NOTE', integerThreshold: 90, metric: 'BRANCH', threshold: 90.0]
+              ],
+              tools: [
+                [parser: 'COBERTURA', pattern: 'coverage.xml']
+              ]
+            )
+          }
+      }
     }
-  }
-}
+    stage('Results') {
+      steps {
+        junit 'result*.xml'
+      }
+    }
+    
+    
+  
   }
 }
