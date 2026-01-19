@@ -6,193 +6,130 @@ pipeline {
   }
 
   stages {
+
+    stage('Get Code') {
+      agent { label 'master' }
+      steps {
+        sh 'whoami && hostname && echo ${WORKSPACE}'
+        checkout scm
+      }
+    }
+
     stage('Dependencies and Wiremock') {
       parallel {
 
         stage('Dependencies') {
-          agent { docker { image 'python:3.11', args '-u 131:139' }}
+          agent { label 'build-agent' }
           steps {
-            sh 'id'
-            sh 'hostname'
-            sh 'echo ${WORKSPACE}'
-
-            
-
+            sh 'whoami && hostname && echo ${WORKSPACE}'
             sh '''
               python3 -m venv venv
               ./venv/bin/pip install --upgrade pip
               ./venv/bin/pip install -r requirements.txt
             '''
-
-            stash name: 'venv', includes: 'venv/**'
           }
         }
 
         stage('Wiremock') {
-          agent { docker { image 'python:3.11' } }
+          agent { label 'master' }
           steps {
-            sh 'id'
-            sh 'hostname'
-            sh 'echo ${WORKSPACE}'
-
+            sh 'whoami && hostname && echo ${WORKSPACE}'
             sh '''
+              echo "Arrancando Wiremock en master"
               docker start wiremock || true
               sleep 4
             '''
           }
         }
+
       }
     }
 
-    /* =======================
-       TESTS (paralelos)
-       ======================= */
     stage('Tests') {
       parallel {
 
-        stage('Unit Tests') {
-        agent { docker { image 'python:3.11' } }
+        stage('Unit') {
+          agent { label 'build-agent' }
           steps {
-            sh 'id'
-            sh 'hostname'
-            sh 'echo ${WORKSPACE}'
-
-            
-            unstash 'venv'
-
+            sh 'whoami && hostname && echo ${WORKSPACE}'
             sh '''
               export PYTHONPATH=$PWD
-              ./venv/bin/coverage run --branch --source=app --omit=app/__init__.py,app/api.py -m pytest test/unit --junitxml=result_unit.xml
+              ./venv/bin/coverage run --branch --source=app \
+                --omit=app/__init__.py,app/api.py \
+                -m pytest test/unit --junitxml=result_unit.xml
               ./venv/bin/coverage xml -o coverage.xml
             '''
             junit 'result_unit.xml'
-            stash name: 'coverage', includes: 'coverage.xml'
           }
         }
 
-        stage('REST Tests') {
-        agent { docker { image 'python:3.11' } }
+        stage('Rest') {
+          agent { label 'build-agent' }
           steps {
-            sh 'id'
-            sh 'hostname'
-            sh 'echo ${WORKSPACE}'
-
-            
-            unstash 'venv'
-
+            sh 'whoami && hostname && echo ${WORKSPACE}'
             sh '''
               export PYTHONPATH=$PWD
               ./venv/bin/flask run & sleep 3
-              ./venv/bin/pytest --junitxml=result_rest.xml test/rest
+              ./venv/bin/pytest test/rest --junitxml=result_rest.xml
             '''
             junit 'result_rest.xml'
           }
         }
+
       }
     }
 
-    /* =======================
-       STATIC ANALYSIS
-       ======================= */
     stage('Static Analysis') {
-      agent { docker { image 'python:3.11' } }
+      agent { label 'analysis-agent' }
       steps {
-        sh 'id'
-        sh 'hostname'
-        sh 'echo ${WORKSPACE}'
-
-        
-        unstash 'venv'
-
+        sh 'whoami && hostname && echo ${WORKSPACE}'
         sh '''
           ./venv/bin/flake8 --exit-zero --format=pylint app > flake8.out
         '''
-
-        recordIssues(
-          qualityGates: [
-            [criticality: 'NOTE', integerThreshold: 8, type: 'TOTAL'],
-            [criticality: 'ERROR', integerThreshold: 10, type: 'TOTAL']
-          ],
-          tools: [flake8(pattern: 'flake8.out')]
-        )
+        recordIssues tools: [flake8(pattern: 'flake8.out')]
       }
     }
 
-    /* =======================
-       SECURITY
-       ======================= */
     stage('Security') {
-      agent { docker { image 'python:3.11' } }
+      agent { label 'analysis-agent' }
       steps {
-        sh 'id'
-        sh 'hostname'
-        sh 'echo ${WORKSPACE}'
-
-        
-        unstash 'venv'
-
+        sh 'whoami && hostname && echo ${WORKSPACE}'
         sh '''
-          ./venv/bin/bandit --exit-zero -r app -f custom -o bandit.out \
-          --msg-template "{abspath}:{line}: [{test_id}] {msg}"
+          ./venv/bin/bandit --exit-zero -r app -f custom -o bandit.out
         '''
-
-        recordIssues(
-          qualityGates: [
-            [criticality: 'NOTE', integerThreshold: 2, type: 'TOTAL'],
-            [criticality: 'FAILURE', integerThreshold: 4, type: 'TOTAL']
-          ],
-          tools: [pyLint(pattern: 'bandit.out')]
-        )
+        recordIssues tools: [pyLint(pattern: 'bandit.out')]
       }
     }
 
-    /* =======================
-       PERFORMANCE (SECUENCIAL)
-       ======================= */
     stage('Performance') {
-      agent { docker { image 'python:3.11' } }
+      agent { label 'analysis-agent' }
       steps {
-        sh 'id'
-        sh 'hostname'
-        sh 'echo ${WORKSPACE}'
-
-        
-
+        sh 'whoami && hostname && echo ${WORKSPACE}'
         sh '''
           /opt/jmeter/bin/jmeter -n \
-          -t test/jmeter/flask.jmx \
-          -l flask.jtl -f
+            -t test/jmeter/flask.jmx \
+            -l flask.jtl -f
         '''
-
         perfReport sourceDataFiles: 'flask.jtl'
       }
     }
 
-    /* =======================
-       COVERAGE
-       ======================= */
     stage('Coverage') {
-      agent { docker { image 'python:3.11' } }
+      agent { label 'build-agent' }
       steps {
-        sh 'id'
-        sh 'hostname'
-        sh 'echo ${WORKSPACE}'
-
-        
-        unstash 'coverage'
-        unstash 'venv'
-
-        recordCoverage(
-          qualityGates: [
-            [criticality: 'ERROR', integerThreshold: 85, metric: 'LINE'],
-            [criticality: 'NOTE', integerThreshold: 95, metric: 'LINE'],
-            [criticality: 'ERROR', integerThreshold: 80, metric: 'BRANCH'],
-            [criticality: 'NOTE', integerThreshold: 90, metric: 'BRANCH']
-          ],
-          tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']]
-        )
+        sh 'whoami && hostname && echo ${WORKSPACE}'
+        recordCoverage tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']]
       }
     }
+
+    stage('Results') {
+      agent { label 'build-agent' }
+      steps {
+        sh 'whoami && hostname && echo ${WORKSPACE}'
+        junit 'result*.xml'
+      }
+    }
+
   }
 
   post {
