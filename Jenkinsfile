@@ -23,15 +23,15 @@ pipeline {
         sh '''
           ./venv/bin/flake8 --exit-zero --format=pylint app >flake8.out
         '''
-        recordIssues(
-          qualityGates: [
-            [criticality: 'NOTE', integerThreshold: 8, threshold: 8.0, type: 'TOTAL'],
-            [criticality: 'ERROR', integerThreshold: 10, threshold: 10.0, type: 'TOTAL']
-          ],
-          tools: [
-            flake8(pattern: 'flake8.out')
-          ]
-        )S
+          recordIssues(
+            qualityGates: [
+              [criticality: 'NOTE', integerThreshold: 8, threshold: 8.0, type: 'TOTAL'],
+              [criticality: 'ERROR', integerThreshold: 10, threshold: 10.0, type: 'TOTAL']
+            ],
+            tools: [
+              flake8(pattern: 'flake8.out')
+            ]
+          )
         // recordIssues tools: [flake8(name: 'Flake8', pattern: 'flake8.out')], qualityGates: [
         //   [threshold: 16, type: 'TOTAL', unstable: true],
         //   [threshold: 17, type: 'TOTAL', unstable: false]
