@@ -116,22 +116,28 @@ pipeline {
       steps {
         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
           sh '''
-              ./venv/bin/coverage run --branch --source=app --omit=app/__init__.py,app/api.py -m pytest test/unit --junitxml=result_unit.xml
-              ./venv/bin/coverage xml -o coverage.xml
-            '''
-            recordCoverage(
-              qualityGates: [
-                [criticality: 'ERROR', integerThreshold: 85, metric: 'LINE', threshold: 85.0],
-                [criticality: 'NOTE', integerThreshold: 95, metric: 'LINE', threshold: 95.0],
-                [criticality: 'ERROR', integerThreshold: 80, metric: 'BRANCH', threshold: 80.0],
-                [criticality: 'NOTE', integerThreshold: 90, metric: 'BRANCH', threshold: 90.0]
-              ],
-              tools: [
-                [parser: 'COBERTURA', pattern: 'coverage.xml']
-              ]
-            )
-          }
-      }
+          export PYTHONPATH=$PWD
+
+        ./venv/bin/coverage run --branch \
+          --source=app \
+          --omit=app/__init__.py,app/api.py \
+          -m unittest discover -s test/unit
+
+        ./venv/bin/coverage xml -o coverage.xml
+      '''
+      recordCoverage(
+        qualityGates: [
+          [criticality: 'ERROR', integerThreshold: 85, metric: 'LINE', threshold: 85.0],
+          [criticality: 'NOTE', integerThreshold: 95, metric: 'LINE', threshold: 95.0],
+          [criticality: 'ERROR', integerThreshold: 80, metric: 'BRANCH', threshold: 80.0],
+          [criticality: 'NOTE', integerThreshold: 90, metric: 'BRANCH', threshold: 90.0]
+        ],
+        tools: [
+          [parser: 'COBERTURA', pattern: 'coverage.xml']
+        ]
+      )
     }
+  }
+}
   }
 }
