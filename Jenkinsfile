@@ -27,6 +27,7 @@ pipeline {
               ./venv/bin/pip install --upgrade pip
               ./venv/bin/pip install -r requirements.txt
             '''
+          stash name: 'venv', includes: 'venv/**'
           }
         }
 
@@ -81,12 +82,14 @@ pipeline {
 
     stage('Static Analysis') {
       agent { label 'analysis-agent' }
+      unstash 'venv'
       steps {
         sh 'whoami && hostname && echo ${WORKSPACE}'
         sh '''
           ./venv/bin/flake8 --exit-zero --format=pylint app > flake8.out
         '''
         recordIssues tools: [flake8(pattern: 'flake8.out')]
+
       }
       post {
         always {
@@ -97,6 +100,7 @@ pipeline {
 
     stage('Security') {
       agent { label 'analysis-agent' }
+      unstash 'venv'
       steps {
         sh 'whoami && hostname && echo ${WORKSPACE}'
         sh '''
@@ -108,6 +112,7 @@ pipeline {
 
     stage('Performance') {
       agent { label 'analysis-agent' }
+      unstash 'venv'
       steps {
         sh 'whoami && hostname && echo ${WORKSPACE}'
         sh '''
