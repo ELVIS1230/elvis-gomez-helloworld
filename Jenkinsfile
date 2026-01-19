@@ -94,7 +94,7 @@ pipeline {
               [criticality: 'FAILURE', integerThreshold: 4, threshold: 4.0, type: 'TOTAL']
             ],
             tools: [
-              pyLint(pattern: 'bandit.out')
+              bandit(pattern: 'bandit.out')
             ]
           )
         }
