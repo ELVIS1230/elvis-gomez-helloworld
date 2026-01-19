@@ -9,15 +9,31 @@ pipeline {
         checkout scm
       }
     }
-    stage('Dependencies') {
-      steps {
-        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-            sh '''
-              python3 -m venv venv
-              ./venv/bin/pip install --upgrade pip
-              ./venv/bin/pip install -r requirements.txt
-            '''
-        }
+    stage('Dependencies and Wiremock') {
+      parallel{
+          stage('Dependencies') {
+            steps {
+              catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                  sh '''
+                    python3 -m venv venv
+                    ./venv/bin/pip install --upgrade pip
+                    ./venv/bin/pip install -r requirements.txt
+                  '''
+
+
+              }
+            }
+          }
+          stage('Wiremock') {
+            steps {
+              catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                  sh '''
+                    docker start wiremock || true
+                    sleep 4
+                  '''
+              }
+            }
+          }
       }
     }
      stage('Test') {
