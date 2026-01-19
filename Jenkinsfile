@@ -44,7 +44,7 @@ pipeline {
               catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                 sh '''
                   export PYTHONPATH=$PWD
-                  ./venv/bin/coverage run --branch --source=app --omit=app/__init__.py,app/api.py -m ./venv/bin/pytest test/unit --junitxml=result_unit.xml
+                  ./venv/bin/coverage run --branch --source=app --omit=app/__init__.py,app/api.py -m pytest test/unit --junitxml=result_unit.xml
                   ./venv/bin/coverage xml -o coverage.xml
                 '''
                   // ./venv/bin/pytest --junitxml=result_unit.xml test/unit
