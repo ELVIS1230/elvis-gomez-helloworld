@@ -8,7 +8,7 @@ pipeline {
   stages {
 
     stage('Get Code') {
-      agent { label 'master' }
+      agent { label 'build-agent' }
       steps {
         sh 'whoami && hostname && echo ${WORKSPACE}'
         checkout scm
@@ -31,7 +31,7 @@ pipeline {
         }
 
         stage('Wiremock') {
-          agent { label 'master' }
+          agent { label 'build-agent' }
           steps {
             sh 'whoami && hostname && echo ${WORKSPACE}'
             sh '''
