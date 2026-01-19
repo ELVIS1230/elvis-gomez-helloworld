@@ -16,7 +16,7 @@ pipeline {
             sh 'hostname'
             sh 'echo ${WORKSPACE}'
 
-            unstash 'source'
+            
 
             sh '''
               python3 -m venv venv
@@ -57,7 +57,7 @@ pipeline {
             sh 'hostname'
             sh 'echo ${WORKSPACE}'
 
-            unstash 'source'
+            
             unstash 'venv'
 
             sh '''
@@ -77,7 +77,7 @@ pipeline {
             sh 'hostname'
             sh 'echo ${WORKSPACE}'
 
-            unstash 'source'
+            
             unstash 'venv'
 
             sh '''
@@ -101,7 +101,7 @@ pipeline {
         sh 'hostname'
         sh 'echo ${WORKSPACE}'
 
-        unstash 'source'
+        
         unstash 'venv'
 
         sh '''
@@ -128,7 +128,7 @@ pipeline {
         sh 'hostname'
         sh 'echo ${WORKSPACE}'
 
-        unstash 'source'
+        
         unstash 'venv'
 
         sh '''
@@ -156,7 +156,7 @@ pipeline {
         sh 'hostname'
         sh 'echo ${WORKSPACE}'
 
-        unstash 'source'
+        
 
         sh '''
           /opt/jmeter/bin/jmeter -n \
@@ -178,7 +178,7 @@ pipeline {
         sh 'hostname'
         sh 'echo ${WORKSPACE}'
 
-        unstash 'source'
+        
         unstash 'coverage'
         unstash 'venv'
 
