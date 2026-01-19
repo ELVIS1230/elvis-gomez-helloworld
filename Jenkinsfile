@@ -115,8 +115,8 @@ pipeline {
       steps {
         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
           sh '''
-              ./venv/bin/coverage run --branch --source=app --omit=app/__init__.py,app/api.py -m pytest test/unit
-              ./venv/bin/coverage xml
+              ./venv/bin/coverage run --branch --source=app --omit=app/__init__.py,app/api.py -m pytest test/unit --junitxml=result_unit.xml
+              ./venv/bin/coverage xml -o coverage.xml
             '''
             recordCoverage(
               qualityGates: [
