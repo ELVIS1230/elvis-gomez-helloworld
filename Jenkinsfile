@@ -4,11 +4,7 @@ pipeline {
         FLASK_APP = 'app/api.py'
   }
   stages {
-    stage('Get Code') {
-      steps {
-        checkout scm
-      }
-    }
+
     stage('Dependencies and Wiremock') {
       parallel{
           stage('Dependencies') {
@@ -36,7 +32,7 @@ pipeline {
           }
       }
     }
-     stage('Test') {
+    stage('Test') {
       // Se ejecutan las pruebas en un solo stage pero en paralelo
         parallel {
           stage('Unit') {
@@ -83,7 +79,7 @@ pipeline {
         }
       }
     }
-     stage('Security') {
+    stage('Security') {
       steps {
         catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
           sh '''
@@ -130,13 +126,10 @@ pipeline {
           }
       }
     }
-    stage('Results') {
-      steps {
-        junit 'result*.xml'
-      }
-    }
-    
-    
-  
+  }
+  post {
+     always {
+       cleanWs()
+     }
   }
 }
